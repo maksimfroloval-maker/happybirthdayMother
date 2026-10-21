@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>С Днём Рождения, Любимая Мама!</title>
+    <!-- Аккуратный и привычный шрифт -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Библиотека салютов -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            /* Базовые сине-фиолетовые цвета (изменяются динамически на основе фото) */
+            --bg-gradient: linear-gradient(135deg, #0d0f1a 0%, #17122b 50%, #291842 100%);
+            --surface-card: rgba(26, 22, 45, 0.85);
+            --border-color: rgba(147, 112, 219, 0.3);
+            --primary: #8a2be2;
+            --primary-dark: #6a1b9a;
+            --accent-cyan: #00d2ff;
+            --text-main: #f0edf6;
+            --text-muted: #b8b1c8;
+            --shadow: 0 10px 30px rgba(106, 27, 154, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 100px;
+            transition: background 1s ease;
+        }
+
+        /* Анимационные холсты */
+        #stars-canvas, #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        #fireworks-canvas { z-index: 99; }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Адаптивный аудио-плеер для телефона */
+        .audio-player-card {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(22, 18, 38, 0.95);
+            backdrop-filter: blur(12px);
+            border: 2px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            width: 90%;
+            max-width: 320px;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .audio-player-card:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: 0 3px 10px rgba(138, 43, 226, 0.4);
+        }
+
+        .track-info {
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .track-info .track-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-info .track-artist {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Заголовки */
+
+header {
+            text-align: center;
+            margin: 30px 0 20px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(45deg, #d8b4fe, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* Конверт-открытка */
+        .envelope-section {
+            margin: 25px auto 35px;
+            max-width: 100%;
+        }
+
+        .envelope-box {
+            background: var(--surface-card);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .envelope-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .envelope-title-wrap h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .envelope-title-wrap p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .envelope-icon {
+            font-size: 1.6rem;
+            background: rgba(138, 43, 226, 0.2);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .letter-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, margin-top 0.3s ease;
+            font-size: 0.98rem;
+            line-height: 1.6;
+            color: #d1c4e9;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .envelope-box.open .letter-content {
+            max-height: 800px;
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+
+        /* Галерея фотографий */
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .photo-card {
+            background: var(--surface-card);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Карточки причин (Flip Cards) */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .flip-card {
+            background-color: transparent;
+            height: 170px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.5s ease;
+            transform-style: preserve-3d;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+
+-webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+        }
+
+        .flip-card-front {
+            background: var(--surface-card);
+            backdrop-filter: blur(10px);
+            color: var(--text-main);
+        }
+
+        .flip-card-front h3 {
+            font-size: 1.1rem;
+            margin-top: 6px;
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .flip-card-back {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            transform: rotateY(180deg);
+            border-color: var(--accent-cyan);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            padding: 20px;
+        }
+
+        /* Кнопка салюта */
+        .action-area {
+            text-align: center;
+            margin: 30px 0 60px;
+        }
+
+        .celebrate-btn {
+            background: linear-gradient(45deg, var(--primary), var(--accent-cyan));
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+        }
+
+        /* Планшеты и ПК */
+        @media (min-width: 600px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 2.8rem; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .photo-card img { height: 280px; }
+            .audio-player-card {
+                top: 20px;
+                right: 20px;
+                bottom: auto;
+                left: auto;
+                transform: none;
+                max-width: none;
+                width: auto;
+            }
+            .action-area { margin: 40px 0; }
+            .celebrate-btn { width: auto; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="stars-canvas"></canvas>
+    <canvas id="fireworks-canvas"></canvas>
+
+    <!-- Скрытое изображение для считывания цветов -->
+    <img id="color-source" src="EKF.jpg" crossorigin="anonymous" style="display:none;" alt="">
+
+    <!-- Аудио -->
+    <audio id="bg-audio" loop preload="auto">
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Плеер -->
+    <div class="audio-player-card" id="audio-toggle">
+        <button class="play-btn" id="audio-icon">▶</button>
+        <div class="track-info">
+            <div class="track-title">Мама</div>
+            <div class="track-artist">Бутырка</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="subtitle">Самой лучшей на свете</div>
+            <h1>С Днём Рождения, Мама!</h1>
+        </header>
+
+        <!-- Конверт -->
+        <section class="envelope-section">
+            <div class="envelope-box" id="envelope">
+                <div class="envelope-header">
+                    <div class="envelope-title-wrap">
+                        <h3>Праздничное послание</h3>
+                        <p>Нажми, чтобы прочитать письмо</p>
+                    </div>
+                    <div class="envelope-icon">💌 </div>
+                </div>
+                <div class="letter-content">
+                    Дорогая, любимая Мамочка!<br><br>
+                    Поздравляю тебя с этим прекрасным днём! Спасибо тебе за твоё бесконечное тепло, за заботу, поддержку и за то, что ты всегда рядом. Ты наполняешь наш дом светом и любовью.<br><br>
+03:17
+Желаю тебе крепкого здоровья, огромного счастья и чтобы все твои мечты обязательно сбывались!<br><br>
+                    <strong>Я тебя очень сильно люблю!</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Галерея -->
+        <section>
+            <h2 class="section-title">Ты самая красивая</h2>
+            <div class="gallery-grid">
+                <div class="photo-card"><img src="EKF.jpg" alt="Мама"></div>
+                <div class="photo-card"><img src="EKF1.jpg" alt="Мама"></div>
+                <div class="photo-card"><img src="EKF2.jpg" alt="Мама"></div>
+                <div class="photo-card"><img src="EKF3.jpg" alt="Мама"></div>
+                <div class="photo-card"><img src="EKF4.jpg" alt="Мама"></div>
+                <div class="photo-card"><img src="EKF5.jpg" alt="Мама"></div>
+                <div class="photo-card"><img src="EKF6.jpg" alt="Мама"></div>
+            </div>
+        </section>
+
+        <!-- Карточки -->
+        <section>
+            <h2 class="section-title">За что я тебя люблю</h2>
+            <div class="cards-grid">
+                
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <span style="font-size: 2rem;">☀️ </span>
+                            <h3>Доброта</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            Твоя улыбка и тёплые слова способны сделать ярче даже самый пасмурный день.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <span style="font-size: 2rem;">☕</span>
+                            <h3>Уют</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            Ты создаешь вокруг себя невероятную атмосферу тепла, в которую всегда хочется возвращаться.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <span style="font-size: 2rem;">🛡️ </span>
+                            <h3>Поддержка</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            Ты всегда веришь в меня, помогаешь мудрым советом и находишь нужные слова.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <span style="font-size: 2.5rem;">🌸 </span>
+                            <h3>Красота</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            Ты у меня самая прекрасная, стильная и замечательная мама на свете!
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Салют -->
+        <div class="action-area">
+            <button class="celebrate-btn" id="firework-btn">
+                <span>🎆 </span> Запустить салют!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // === АВТОМАТИЧЕСКИЙ РАСЧЕТ ЦВЕТОВ ИЗ ФОТО ===
+        const imgElement = document.getElementById('color-source');
+        imgElement.onload = function() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 50;
+                canvas.height = 50;
+                ctx.drawImage(imgElement, 0, 0, 50, 50);
+
+const imageData = ctx.getImageData(0, 0, 50, 50).data;
+                let r = 0, g = 0, b = 0, count = 0;
+
+                for (let i = 0; i < imageData.length; i += 16) {
+                    r += imageData[i];
+                    g += imageData[i+1];
+                    b += imageData[i+2];
+                    count++;
+                }
+
+                r = Math.floor(r / count);
+                g = Math.floor(g / count);
+                b = Math.floor(b / count);
+
+                // Создаем гармоничные оттенки на основе доминирующего цвета фото
+                const root = document.documentElement;
+                root.style.setProperty('--bg-gradient', `linear-gradient(135deg, rgb(${Math.max(10, r-30)}, ${Math.max(10, g-30)}, ${Math.max(10, b-30)}) 0%, rgb(${Math.floor(r/2)}, ${Math.floor(g/2)}, ${Math.floor(b/2)}) 50%, #111 100%)`);
+                root.style.setProperty('--primary', `rgb(${Math.min(255, r+40)}, ${Math.min(255, g+20)}, ${Math.min(255, b+60)})`);
+                root.style.setProperty('--accent-cyan', `rgb(${Math.min(255, r+80)}, ${Math.min(255, g+100)}, ${Math.min(255, b+120)})`);
+            } catch (e) {
+                console.log("Не удалось считать цвета из фото (ошибка CORS или локального файла), используются стандартные цвета.");
+            }
+        };
+
+        // === ПЛЕЕР ===
+        const audio = document.getElementById('bg-audio');
+        const audioToggle = document.getElementById('audio-toggle');
+        const audioIcon = document.getElementById('audio-icon');
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if (isPlaying) {
+                audio.pause();
+                audioIcon.textContent = '▶';
+                isPlaying = false;
+            } else {
+                audio.play().then(() => {
+                    audioIcon.textContent = '⏸';
+                    isPlaying = true;
+                }).catch(err => console.log(err));
+            }
+        }
+
+        audioToggle.addEventListener('click', toggleAudio);
+        document.body.addEventListener('click', function firstClick() {
+            if (!isPlaying) toggleAudio();
+            document.body.removeEventListener('click', firstClick);
+        }, { once: true });
+
+        // === КОНВЕРТ ===
+        const envelope = document.getElementById('envelope');
+        envelope.addEventListener('click', () => {
+            envelope.classList.toggle('open');
+            if (envelope.classList.contains('open')) {
+                confetti({ particleCount: 70, spread: 70, origin: { y: 0.5 } });
+            }
+        });
+
+        // === ПЕРЕВОРОТ КАРТОЧЕК ===
+        document.querySelectorAll('.flip-card').forEach(card => {
+            card.addEventListener('click', () => card.classList.toggle('flipped'));
+        });
+
+        // === ФОНОВЫЕ ИСКРЫ ===
+        const canvas = document.getElementById('stars-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const dots = Array.from({ length: 25 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 1,
+            speedY: Math.random() * 0.3 + 0.1,
+            opacity: Math.random() * 0.5 + 0.3
+        }));
+
+        function drawDots() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            dots.forEach(d => {
+                ctx.fillStyle = `rgba(200, 180, 255, ${d.opacity})`;
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                d.y -= d.speedY;
+                if (d.y < 0) d.y = canvas.height;
+            });
+            requestAnimationFrame(drawDots);
+        }
+        drawDots();
+
+        // === САЛЮТ ===
+
+document.getElementById('firework-btn').addEventListener('click', () => {
+            const duration = 3 * 1000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 60,
+                    origin: { x: 0 },
+                    colors: ['#ffffff', '#ffb703', '#a855f7']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 60,
+                    origin: { x: 1 },
+                    colors: ['#ffffff', '#ffb703', '#a855f7']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        });
+    </script>
+</body>
+</html>
